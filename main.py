@@ -32,7 +32,7 @@ async def oauth_callback(request: Request):
 
     # Отправим сообщение в Telegram (заглушка: просто админу)
     if access_token:
-        await httpx.post(
+        await client.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
             json={
                 "chat_id": "7692757705",  # временно — твой Telegram ID
