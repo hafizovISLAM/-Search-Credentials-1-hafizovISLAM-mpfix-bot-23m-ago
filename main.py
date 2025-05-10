@@ -63,3 +63,16 @@ async def oauth_callback(request: Request):
             return {"status": "ok", "access_token": access_token}
         else:
             return {"error": "Failed to get token", "response": token_data}
+
+@app.get("/token")
+async def get_token(telegram_id: str):
+    if not os.path.exists(TOKEN_FILE):
+        return {"error": "not_found"}
+
+    with open(TOKEN_FILE, "r") as f:
+        tokens = json.load(f)
+
+    if telegram_id not in tokens:
+        return {"error": "not_found"}
+
+    return {"access_token": tokens[telegram_id]["access_token"]}
