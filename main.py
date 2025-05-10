@@ -1,11 +1,16 @@
 from fastapi import FastAPI, Request
 import httpx
+import json
+import os
+from datetime import datetime
 
 app = FastAPI()
 
 CLIENT_ID = "5bb733cbaa7e427eaff9df6ee42fa2ca"
 CLIENT_SECRET = "936020118acd491e88122f4daf9dd3ef"
 BOT_TOKEN = "7692757705:AAEIb8qW2n3l0W-_VNYc4t-OXAyyrdyKYOs"
+
+TOKEN_FILE = "tokens.json"
 
 @app.get("/oauth/callback")
 async def oauth_callback(request: Request):
@@ -31,6 +36,7 @@ async def oauth_callback(request: Request):
         access_token = token_data.get("access_token")
 
         if access_token:
+            # Отправка уведомления в Telegram
             await client.post(
                 f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
                 json={
@@ -38,6 +44,22 @@ async def oauth_callback(request: Request):
                     "text": "✅ Доступ к Яндексу получен! Токен сохранён."
                 }
             )
+
+            # Сохраняем токен в файл
+            if os.path.exists(TOKEN_FILE):
+                with open(TOKEN_FILE, "r") as f:
+                    token_store = json.load(f)
+            else:
+                token_store = {}
+
+            token_store[state] = {
+                "access_token": access_token,
+                "created_at": datetime.utcnow().isoformat()
+            }
+
+            with open(TOKEN_FILE, "w") as f:
+                json.dump(token_store, f, indent=2)
+
             return {"status": "ok", "access_token": access_token}
         else:
             return {"error": "Failed to get token", "response": token_data}
